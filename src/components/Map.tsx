@@ -1,6 +1,5 @@
 import styled from "styled-components";
 import GoogleMapReact from "google-map-react";
-import { getPlaceData } from "../api";
 import { useEffect, useState } from "react";
 
 const MapBox = styled.div`
@@ -17,15 +16,11 @@ function Map() {
   const [bound, setBound] = useState({ ne: 0, sw: 0 });
 
   useEffect(() => {
-    getPlaceData(bound.sw, bound.sw).then((res) => {
-      setData(res);
-      console.log(data);
-    });
-  }, [coord, bound, data]);
+    navigator.geolocation.getCurrentPosition((position) => {
+      setCoord({ lat: position.coords.latitude, lng: position.coords.longitude });
+    });   
+  }, []);
 
-  navigator.geolocation.getCurrentPosition((position) => {
-    setCoord({ lat: position.coords.latitude, lng: position.coords.longitude });
-  });
 
   const mapProps = {
     center: { lat : 0, lng: 0 },
