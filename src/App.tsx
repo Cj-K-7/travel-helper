@@ -1,11 +1,12 @@
-import Map from "./components/Map";
 import UI from "./components/UI";
+import GlobalStyle from "./style/GlobalStyle";
 
 function App() {
   return (
-    <div>
-      <UI/>
-    </div>
+    <>
+      <GlobalStyle />
+      <UI />
+    </>
   );
 }
 
