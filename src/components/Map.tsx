@@ -1,39 +1,61 @@
 import styled from "styled-components";
-import GoogleMapReact from "google-map-react";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import GoogleMapReact, { Bounds, Coords } from "google-map-react";
+import { useState } from "react";
 import { useQuery } from "react-query";
-import { fetchdata } from "../api";
+import { fetchHotelsdata, HotelResult } from "../api";
+import Marker from "./Marker";
+import { useSetRecoilState } from "recoil";
+import { clickedMarkAtom } from "../atom";
+import Loader from "./Loader";
 
 const MapBox = styled.div`
   position: absolute;
   top: 0;
   left: 0;
+
   width: 100%;
-  
   height: 100%;
 `;
 
 function Map() {
-  const {isLoading, data} = useQuery("esports", fetchdata)
- 
-  console.log(data);
-  const mapProps = {
-    center: { lat: 0, lng: 0 },
-    zomm: 11,
+  const defaultMapProps = {
+    center: { lat: 37.5642135, lng: 127.0016985 },
+    zoom: 13,
   };
+
+  const [coordinate, setCoordinate] = useState<Coords>(defaultMapProps.center);
+  const [bounds, setBounds] = useState<Bounds>();
+  const setClicked = useSetRecoilState(clickedMarkAtom);
+
+  const { isLoading: isHotelsLoading, data: hotelsData } =
+    useQuery<HotelResult>(["hotels", bounds], fetchHotelsdata);
   return (
-    <MapBox id="map">
-      {/* <GoogleMapReact
-        bootstrapURLKeys={{ key: `${process.env.REACT_APP_GOOGLEMAP_API_KEY}` }}
-        defaultCenter={mapProps.center}
-        center={coord}
-        defaultZoom={mapProps.zomm}
-        onChange={(e) => {
-          setCoord({ lat: e.center.lat, lng: e.center.lng });
-          setBound({ ne: +e.marginBounds.ne, sw: +e.marginBounds.sw });
+    <MapBox>
+      <GoogleMapReact
+        bootstrapURLKeys={{
+          key: `${process.env.REACT_APP_GOOGLEMAP_API_KEY}`,
         }}
-      ></GoogleMapReact> */}
+        defaultCenter={defaultMapProps.center}
+        center={coordinate}
+        defaultZoom={defaultMapProps.zoom}
+        onChange={(event) => {
+          setCoordinate({ lat: event.center.lat, lng: event.center.lng });
+          setBounds(event.marginBounds);
+        }}
+      >
+        {isHotelsLoading
+          ? null
+          : hotelsData?.data.map((hotel) => (
+              <Marker
+                key={hotel.name}
+                onClick={() => setClicked(hotel.location_id)}
+                id={hotel.location_id}
+                lat={hotel.latitude}
+                lng={hotel.longitude}
+              />
+            ))}
+      </GoogleMapReact>
+      {isHotelsLoading ? <Loader /> : null}
     </MapBox>
   );
 }
